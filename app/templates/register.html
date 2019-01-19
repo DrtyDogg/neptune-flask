@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block content %}
+<div class="col-sm-6 col-sm-offset-3">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h1>Register</h1>
+        </div>
+        <div class="panel-body">
+            <form action="" method="POST" novalidate>
+                {% if form.name.errors %}
+                <div class="alert alert-danger">
+                    Name:
+                    <ul>
+                        {% for error in form.name.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                {% if form.email.errors %}
+                <div class="alert alert-danger">
+                    Email Address:
+                    <ul>
+                        {% for error in form.email.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                {% if form.password.errors %}
+                <div class="alert alert-danger">
+                    Password:
+                    <ul>
+                        {% for error in form.password.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                {% if form.password_verify.errors %}
+                <div class="alert alert-danger">
+                    Password:
+                    <ul>
+                        {% for error in form.password_verify.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                {{ form.hidden_tag() }}
+                <div class="form-group input-group {{ 'has-error' if form.name.errors }}">
+                    <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+                    {{form.name(class="form-control", placeholder="Display Name")}}
+                </div>
+                <div class="form-group input-group {{ 'has-error' if form.email.errors }}">
+                    <span class="input-group-addon"><i class="glyphicon glyphicon-envelope"></i></span>
+                    {{form.email(class="form-control", placeholder="Email Address")}}
+                </div>
+                <div class="form-group input-group {{ 'has-error' if form.password.errors }}">
+                    <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+                    {{ form.password(class="form-control", placeholder="Password") }}
+                </div>
+                <div class="form-group input-group {{ 'has-error' if form.password_verify.errors }}">
+                    <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+                    {{ form.password_verify(class="form-control", placeholder="Repeat Password") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+        </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

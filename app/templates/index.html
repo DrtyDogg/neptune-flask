@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="col-md-4 col-sm-6 col-xs12">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h2>Last Temp</h2>
+        </div>
+        <div class="panel-body">
+            <h3 class="text-center">{{ temp.temp }}</h3>
+        </div>
+    </div>
+</div>
+<div class="col-md-4 col-sm-6 col-xs12">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h2>Last Water Change</h2>
+        </div>
+        <div class="panel-body">
+            <h3 class="text-center">{{ moment(water.timestamp).calendar() }}</h3>
+        </div>
+    </div>
+</div>
+<div class="col-md-4 col-sm-6 col-xs12">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h2>Days since feeding</h2>
+        </div>
+        <div class="panel-body">
+            <h3 class="text-center">{{ moment(feed.timestamp).calendar() }}</h3>
+        </div>
+    </div>
+</div>
+{% endblock %}
