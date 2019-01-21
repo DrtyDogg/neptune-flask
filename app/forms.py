@@ -4,6 +4,14 @@ from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from app.models import User
 
 
+class AquariumForm(FlaskForm):
+    name = StringField('Aquarium Name:', validators=[DataRequired(
+        message='Name is required')])
+    location = StringField('Aquarium Location:', validators=[DataRequired(
+        message='Location is required')])
+    submit = SubmitField('Create')
+
+
 class LoginForm(FlaskForm):
     email = StringField('Email Address:', validators=[DataRequired(
         message="Email address is required"),
@@ -12,6 +20,20 @@ class LoginForm(FlaskForm):
         message="You can't log in without a password")])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Login')
+
+
+class NewFeedingForm(FlaskForm):
+    submit = SubmitField('Submit')
+
+
+class NewWaterChangeForm(FlaskForm):
+    amount = StringField('Amount:', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+
+class NewTemperaturReadingForm(FlaskForm):
+    temp = StringField('Temperature:', validators=[DataRequired()])
+    submit = SubmitField('Submit')
 
 
 class RegistrationForm(FlaskForm):
@@ -29,16 +51,3 @@ class RegistrationForm(FlaskForm):
         if user is not None:
             raise ValidationError('Please use a different email address')
 
-
-class NewFeedingForm(FlaskForm):
-    submit = SubmitField('Submit')
-
-
-class NewWaterChangeForm(FlaskForm):
-    amount = StringField('Amount:', validators=[DataRequired()])
-    submit = SubmitField('Submit')
-
-
-class NewTemperaturReadingForm(FlaskForm):
-    temp = StringField('Temperature:', validators=[DataRequired()])
-    submit = SubmitField('Submit')

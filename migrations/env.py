@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, MetaData
 from logging.config import fileConfig
 import logging
 
@@ -73,8 +73,9 @@ def run_migrations_online():
     context.configure(connection=connection,
                       target_metadata=target_metadata,
                       process_revision_directives=process_revision_directives,
-                      **current_app.extensions['migrate'].configure_args)
-    
+                      **current_app.extensions['migrate'].configure_args,
+                      render_as_batch=True)
+
     try:
         with context.begin_transaction():
             context.run_migrations()

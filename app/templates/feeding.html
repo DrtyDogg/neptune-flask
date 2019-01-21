@@ -52,7 +52,7 @@
         </div>
         <div class="panel-footer">
             <h3>Record a new feeding</h3>
-            <form action="" method="POST">
+            <form action="{{ url_for('new_feeding') }}" method="POST">
                 {{ form.hidden_tag() }}
                 {{ form.submit(class="btn btn-primary") }}
             </form>

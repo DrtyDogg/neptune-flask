@@ -6,11 +6,11 @@
 {% endblock %}
 
 {% block title %}
-        {% if title %}
-        {{ title }} - Fish Tracks
-        {% else %}
-        Welcome to the Ellis Fish Tracks
-        {% endif %}
+{% if title %}
+{{ title }} - Fish Tracks
+{% else %}
+Welcome to the Ellis Fish Tracks
+{% endif %}
 {% endblock %}
 
 {% block navbar %}
@@ -26,12 +26,35 @@
             <li><a href="{{ url_for('temperature') }}">Temperature</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
+            {% if aquariums %}
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown">
+                    {{ aquariums[current_user.current_aquarium - 1].name }}
+                    <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="{{ url_for('edit_aquarium', name=aquariums[current_user.current_aquarium - 1].name)}}">Edit {{ aquariums[current_user.current_aquarium - 1].name }}</a></li>
+                    {% for aquarium in aquariums %}
+                    {% if aquarium.id != current_user.current_aquarium %}
+                    <li><a href="{{ url_for('set_aquarium', aquarium_id=aquarium.id) }}">{{ aquarium.name }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                    <li><a href="{{ url_for('new_aquarium') }}">New aquarium</a></li>
+                </ul>
+                {% endif %}
+            </li>
             {% if current_user.is_anonymous %}
             <li><a href="{{ url_for('register') }}"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
             <li><a href="{{ url_for('login') }}"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
             {% else %}
-            <li><a href="{{url_for('user',id=current_user.id)}}"><span class="glyphicon glyphicon-user"></span> {{ current_user.name }}</a></li>
-            <li><a href="{{url_for('logout') }}"><span class="glyphicon glyphicon-log-out"></span> Log out</a></li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span> 
+                    {{ current_user.name }}<span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="{{url_for('user',id=current_user.id)}}">Profile</a></li>
+                    <li><a href="{{url_for('logout') }}"><span class="glyphicon glyphicon-log-out"></span> Log out</a></li>
+                </ul>
+            </li>
             {% endif %}
         </ul>
     </div>
@@ -41,13 +64,13 @@
 {% block flash %}
 {% with messages = get_flashed_messages() %}
 {% if messages %}
-    <ul class="alert alert-warning">
-        {% for message in messages %}
-        <li>
-            {{ message }}
-        </li>
-        {% endfor %}
-    </ul>
+<ul class="alert alert-warning">
+    {% for message in messages %}
+    <li>
+        {{ message }}
+    </li>
+    {% endfor %}
+</ul>
 {% endif %}
 {% endwith %}
 {% endblock %}

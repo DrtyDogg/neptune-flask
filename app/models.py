@@ -10,6 +10,7 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(32))
     password_hash = db.Column(db.String(128))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow())
+    current_aquarium = db.Column(db.Integer, default=1)
     feedings = db.relationship('Feeding', backref='user', lazy='dynamic')
     water_changes = db.relationship(
         'WaterChange', backref='user', lazy='dynamic')
@@ -33,6 +34,7 @@ class Feeding(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    aquarium_id = db.Column(db.Integer, db.ForeignKey('aquarium.id'))
 
     def __repr__(self):
         u = User.query.get(self.user_id)
@@ -44,6 +46,7 @@ class WaterChange(db.Model):
     amount = db.Column(db.Integer)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    aquarium_id = db.Column(db.Integer, db.ForeignKey('aquarium.id'))
 
     def __repr__(self):
         u = User.query.get(self.user_id)
@@ -55,6 +58,19 @@ class Temperature(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     temp = db.Column(db.Integer)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow())
+    aquarium_id = db.Column(db.Integer, db.ForeignKey('aquarium.id'))
 
     def __repr__(self):
         return '<Temperature {} degrees on {}>'.format(self.temp, self.timestamp)
+
+
+class Aquarium(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), index=True)
+    location = db.Column(db.String(64))
+    feedings = db.relationship('Feeding', backref='aquarium', lazy='dynamic')
+    water_changes = db.relationship(
+        'WaterChange', backref='aquarium', lazy='dynamic')
+
+    def __repr__(self):
+        return '<Aquarium {}>'.format(self.name)

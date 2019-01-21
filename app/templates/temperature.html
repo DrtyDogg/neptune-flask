@@ -37,7 +37,7 @@
         </div>
         <div class="panel-footer">
             <h3>Record a new temperature reading</h3>
-            <form action="" method="POST">
+            <form action="{{ url_for('new_temperature') }}" method="POST">
                 {{ form.hidden_tag() }}
                 <div class="form-group input-group {{ 'has-error' if form.temp.errors }}">
                         {{form.temp(class="form-control", size="3")}}

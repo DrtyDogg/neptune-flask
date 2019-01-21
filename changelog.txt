@@ -1,0 +1,4 @@
+Fixed erro if loading the index with a blank database
+Updated migration/env.py to better support sqlite databases
+Updated app/__init__.py to better support sqlite databases
+Created the aquarium.html
