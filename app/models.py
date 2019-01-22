@@ -74,3 +74,11 @@ class Aquarium(db.Model):
 
     def __repr__(self):
         return '<Aquarium {}>'.format(self.name)
+
+
+class Dashboard(object):
+    def __init__(self, name=None, temperature=None, feeding=None, waterchange=None):
+        self.name = name
+        self.temperature = temperature
+        self.feeding = feeding
+        self.waterchange = waterchange

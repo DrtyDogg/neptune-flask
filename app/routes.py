@@ -2,7 +2,7 @@ from app import app, db
 from flask import render_template, flash, request, redirect, url_for, session
 from app.forms import AquariumForm, LoginForm, RegistrationForm, NewFeedingForm, NewWaterChangeForm, NewTemperaturReadingForm
 from flask_login import current_user, login_user, logout_user, login_required
-from app.models import User, WaterChange, Feeding, Temperature, Aquarium
+from app.models import User, WaterChange, Feeding, Temperature, Aquarium, Dashboard
 from werkzeug.urls import url_parse
 from datetime import datetime
 
@@ -109,8 +109,22 @@ def index():
     water = WaterChange.query.order_by(WaterChange.timestamp.desc()).first()
     feed = Feeding.query.order_by(Feeding.timestamp.desc()).first()
     temp = Temperature.query.order_by(Temperature.timestamp.desc()).first()
+    dash = []
+    for aquarium in aquariums:
+        dash.append(Dashboard(
+            aquarium.name,
+            Temperature.query.filter_by(
+                aquarium_id=aquarium.id).order_by(
+                Temperature.timestamp.desc()).first().temp,
+            Feeding.query.filter_by(
+                aquarium_id=aquarium.id).order_by(
+                    Feeding.timestamp.desc()).first().timestamp,
+            WaterChange.query.filter_by(
+                aquarium_id=aquarium.id).order_by(
+                    WaterChange.timestamp.desc()).first().timestamp))
+
     return render_template(
-        'index.html', title='Home', water=water, feed=feed, temp=temp, aquariums=aquariums)
+        'index.html', title='Home', dash=dash, aquariums=aquariums)
 
 
 @app.route('/login', methods=['GET', 'POST'])
