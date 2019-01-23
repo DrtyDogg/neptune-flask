@@ -1,5 +1,16 @@
+*multiple_aquariums
 Fixed error if loading the index with a blank database
 Updated migration/env.py to better support sqlite databases
 Updated app/__init__.py to better support sqlite databases
 Created the aquarium.html
 Updated all views to support multiple aquariums
+
+*cleanup
+fixed error on index if the database is blank
+created an anonymous user class
+//Fix the aquarium dropdown always takes you to index
+fixed the waterchange counts showing all aquariums
+fixed the feedings count to not need a call to the Users table
+added logging when not in debug mode
+//add pagination to the waterchange, feeding, temperature pages
+//convert to flask blueprints

@@ -60,8 +60,6 @@ Welcome to the Ellis Fish Tracks
     </div>
 </nav>
 {% endblock %}
-
-{% block flash %}
 {% with messages = get_flashed_messages() %}
 {% if messages %}
 <ul class="alert alert-warning">
@@ -73,7 +71,6 @@ Welcome to the Ellis Fish Tracks
 </ul>
 {% endif %}
 {% endwith %}
-{% endblock %}
 
 {% block content %}
 

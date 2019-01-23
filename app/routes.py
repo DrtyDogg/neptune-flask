@@ -1,5 +1,5 @@
 from app import app, db
-from flask import render_template, flash, request, redirect, url_for, session
+from flask import render_template, flash, request, redirect, url_for
 from app.forms import AquariumForm, LoginForm, RegistrationForm, NewFeedingForm, NewWaterChangeForm, NewTemperaturReadingForm
 from flask_login import current_user, login_user, logout_user, login_required
 from app.models import User, WaterChange, Feeding, Temperature, Aquarium, Dashboard
@@ -83,20 +83,27 @@ def feeding():
     feedings = Feeding.query.filter_by(
         aquarium_id=current_user.current_aquarium).order_by(
             Feeding.timestamp.desc()).all()
-    users = User.query.all()
+    counts = []
+    myusers = set([x.user.name for x in feedings])
+    for user in myusers:
+        count = len([x for x in feedings if x.user.name == user])
+        counts.append({'name': user, 'count': count})
     return render_template(
         'feeding.html',
         title='Feeding',
         form=form,
         feedings=feedings,
-        users=users,
+        counts=counts,
         aquariums=aquariums)
 
 
 @app.route('/feeding/new', methods=['POST'])
 @login_required
 def new_feeding():
-    feeding = Feeding(user_id=current_user.id, aquarium_id=current_user.current_aquarium)
+    feeding = Feeding(
+        user_id=current_user.id,
+        timestamp=datetime.utcnow(),
+        aquarium_id=current_user.current_aquarium)
     db.session.add(feeding)
     db.session.commit()
     return redirect(url_for('feeding'))
@@ -106,22 +113,34 @@ def new_feeding():
 @app.route('/index')
 def index():
     aquariums = Aquarium.query.all()
-    water = WaterChange.query.order_by(WaterChange.timestamp.desc()).first()
-    feed = Feeding.query.order_by(Feeding.timestamp.desc()).first()
-    temp = Temperature.query.order_by(Temperature.timestamp.desc()).first()
     dash = []
     for aquarium in aquariums:
+        if Temperature.query.filter_by(aquarium_id=aquarium.id).count() > 0:
+            temp = Temperature.query.filter_by(
+                aquarium_id=aquarium.id).order_by(
+                Temperature.timestamp.desc()).first().temp
+        else:
+            temp = 'N/A'
+
+        if Feeding.query.filter_by(aquarium_id=aquarium.id).count() > 0:
+            feeding = Feeding.query.filter_by(
+                aquarium_id=aquarium.id).order_by(
+                    Feeding.timestamp.desc()).first().timestamp
+        else:
+            feeding = None
+
+        if WaterChange.query.filter_by(aquarium_id=aquarium.id).count() > 0:
+            waterchange = WaterChange.query.filter_by(
+                aquarium_id=aquarium.id).order_by(
+                    WaterChange.timestamp.desc()).first().timestamp
+        else:
+            waterchange = None
+
         dash.append(Dashboard(
             aquarium.name,
-            Temperature.query.filter_by(
-                aquarium_id=aquarium.id).order_by(
-                Temperature.timestamp.desc()).first().temp,
-            Feeding.query.filter_by(
-                aquarium_id=aquarium.id).order_by(
-                    Feeding.timestamp.desc()).first().timestamp,
-            WaterChange.query.filter_by(
-                aquarium_id=aquarium.id).order_by(
-                    WaterChange.timestamp.desc()).first().timestamp))
+            temp,
+            feeding,
+            waterchange))
 
     return render_template(
         'index.html', title='Home', dash=dash, aquariums=aquariums)
@@ -174,18 +193,15 @@ def temperature():
         aquarium_id=current_user.current_aquarium).order_by(
             Temperature.timestamp.desc()).all()
     aquariums = Aquarium.query.all()
-    total = 0
-    count = 0
     average = 0
     if len(temps) > 0:
-        for t in temps:
-            total += t.temp
-            count = count + 1
-            average = int(round(total/count))
+        average = sum([x.temp for x in temps]) / len(temps)
+
     return render_template(
         'temperature.html',
         title='Temperature',
-        form=form, average=average,
+        form=form,
+        average=average,
         temps=temps,
         aquariums=aquariums)
 
@@ -195,6 +211,7 @@ def temperature():
 def new_temperature():
     t = Temperature(
         temp=request.form['temp'],
+        timestamp=datetime.utcnow(),
         aquarium_id=current_user.current_aquarium)
     db.session.add(t)
     db.session.commit()
@@ -223,26 +240,21 @@ def waterchange():
     users = User.query.all()
     counts = []
     for u in users:
-        count = len(WaterChange.query.filter_by(
-            aquarium_id=current_user.current_aquarium).filter_by(
-                user_id=u.id).all())
-        counts.append(user.name, count)
+        if len(waterchanges) > 0:
+            count = len([x for x in waterchanges if x.user_id == u.id])
+            counts.append({'name': u.name, 'count': count})
 
-    total = 0
-    count = 0
     average = 'N/A'
     if len(waterchanges) > 0:
-        for wc in waterchanges:
-            total += wc.amount
-            count = count + 1
-        average = int(round(total/count, 0))
+        average = int(sum([x.amount for x in waterchanges]) / len(waterchanges))
+
     return render_template(
         'waterchange.html',
         title='Water Change',
         form=form,
         waterchanges=waterchanges,
-        users=users,
         average=average,
+        counts=counts,
         aquariums=aquariums)
 
 
@@ -252,6 +264,7 @@ def new_waterchange():
     wc = WaterChange(
         user_id=current_user.id,
         amount=request.form['amount'],
+        timestamp=datetime.utcnow(),
         aquarium_id=current_user.current_aquarium)
     db.session.add(wc)
     db.session.commit()
