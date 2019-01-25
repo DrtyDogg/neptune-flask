@@ -7,16 +7,19 @@ from werkzeug.urls import url_parse
 from datetime import datetime
 
 
-@app.before_first_request
-def before_first_request():
-    if len(Aquarium.query.all()) == 0:
-        a = Aquarium(name='Home Aquarium')
-        db.session.add(a)
-        db.session.commit()
-
-
 @app.before_request
 def before_request():
+    # check if it is a new installation
+    if User.query.first() is None:
+        if request.path != url_for('register'):
+            flash('No users exist, please create an admin user', category='warning')
+            return redirect(url_for('register'))
+    else:
+        if Aquarium.query.first() is None:
+            if request.path != url_for('new_aquarium'):
+                flash('There are not any aquariums, please create one to continue', category='warning')
+                return redirect(url_for('new_aquarium'))
+
     if current_user.is_authenticated:
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
