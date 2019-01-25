@@ -15,7 +15,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for t in temps %}
+                    {% for t in query.items %}
                     <tr>
                         <td>{{ moment(t.timestamp).format('LLL') }}</td>
                         <td>{{ t.temp }}</td>
@@ -24,6 +24,7 @@
                 </tbody>
             </table>
         </div>
+        {% include '_pager.html' %}
     </div>
 </div>
 <div class="col-md-3">
@@ -40,8 +41,8 @@
             <form action="{{ url_for('new_temperature') }}" method="POST">
                 {{ form.hidden_tag() }}
                 <div class="form-group input-group {{ 'has-error' if form.temp.errors }}">
-                        {{form.temp(class="form-control", size="3")}}
-                        <span class="input-group-addon"><i>&deg; F</i></span>
+                    {{form.temp(class="form-control", size="3")}}
+                    <span class="input-group-addon"><i>&deg; F</i></span>
                 </div>
                 {{ form.submit(class="btn btn-primary") }}
             </form>

@@ -1,0 +1,17 @@
+{% if query.pages > 1 %}
+<div class="panel-footer text-center">
+    <ul class="pagination pagination-lg">
+        <li class="page-item {{ 'disabled' if not pager.prev_url }}">
+            <a href="{{ pager.prev_url if pager.prev_url else '#' }}">&laquo;</a>
+        </li>
+        {% for i in range(pager.startpage, pager.endpage) %}
+        <li class="page-item {{ 'active' if query.page == i}}">
+            <a href="{{ url_for(route) }}?page={{ i }}">{{ i }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {{ 'disabled' if not pager.next_url }}">
+            <a href="{{ pager.next_url if pager.next_url else '#' }}">&raquo;</a>
+        </li>
+    </ul>
+</div>
+{% endif %}

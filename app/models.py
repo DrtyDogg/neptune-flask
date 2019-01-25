@@ -82,3 +82,18 @@ class Dashboard(object):
         self.temperature = temperature
         self.feeding = feeding
         self.waterchange = waterchange
+
+
+class Pager(object):
+    next_url = None
+    prev_url = None
+    startpage = 1
+    endpage = 10
+    route = None
+
+    def __init__(self, next_url, prev_url, startpage, endpage, route):
+        self.next_url = next_url
+        self.prev_url = prev_url
+        self.startpage = startpage
+        self.endpage = endpage
+        self.route = route

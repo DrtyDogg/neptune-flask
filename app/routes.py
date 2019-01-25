@@ -2,7 +2,7 @@ from app import app, db
 from flask import render_template, flash, request, redirect, url_for
 from app.forms import AquariumForm, LoginForm, RegistrationForm, NewFeedingForm, NewWaterChangeForm, NewTemperaturReadingForm
 from flask_login import current_user, login_user, logout_user, login_required
-from app.models import User, WaterChange, Feeding, Temperature, Aquarium, Dashboard
+from app.models import User, WaterChange, Feeding, Temperature, Aquarium, Dashboard, Pager
 from werkzeug.urls import url_parse
 from datetime import datetime
 
@@ -32,12 +32,13 @@ def new_aquarium():
         db.session.add(aquarium)
         db.session.commit()
         next_page = request.args.get('next')
-        flash('Aquarium was created successfully')
         if not next_page or url_parse(next_page.netloc) != '':
             next_page = url_for('index')
+        flash('The aquarium has been created', 'success')
         return redirect(next_page)
     return render_template(
         'aquarium.html',
+        route='aquarium',
         title='Aquarium',
         head='Create a new aquarium',
         form=form,
@@ -48,20 +49,24 @@ def new_aquarium():
 @login_required
 def edit_aquarium(name):
     form = AquariumForm()
+    aquariums = Aquarium.query.all()
     aquarium = Aquarium.query.filter_by(name=name).first()
     if aquarium is not None:
         if form.validate_on_submit():
             aquarium.name = form.name.data
             aquarium.location = form.location.data
             db.session.commit()
+            flash('The aquarium has been updated', 'success')
         else:
             form.name.data = aquarium.name
             form.location.data = aquarium.location
     return render_template(
         'aquarium.html',
+        route='edit_aquarium',
         title='Edit an aquarium',
         head='Edit the {} aquarium'.format(aquarium.name),
-        form=form)
+        form=form,
+        aquariums=aquariums)
 
 
 @app.route('/aquarium/set/<aquarium_id>', methods=['GET'])
@@ -70,16 +75,23 @@ def set_aquarium(aquarium_id):
     current_user.current_aquarium = aquarium_id
     db.session.commit()
     next_page = request.args.get('next')
+    aquarium = Aquarium.query.get(aquarium_id)
     if not next_page or url_parse(next_page.netloc) != '':
         next_page = url_for('index')
+    flash('You have set {} as the current aquarium'.format(aquarium.name), 'info')
     return redirect(next_page)
 
 
-@app.route('/feeding', methods=['GET', 'POST'])
+@app.route('/feeding', methods=['GET'])
 @login_required
 def feeding():
+    page = request.args.get('page', 1, type=int)
     form = NewFeedingForm()
     aquariums = Aquarium.query.all()
+    query = Feeding.query.filter_by(
+        aquarium_id=current_user.current_aquarium).order_by(
+            Feeding.timestamp.desc()).paginate(
+                page, app.config['PAGINATE'], False)
     feedings = Feeding.query.filter_by(
         aquarium_id=current_user.current_aquarium).order_by(
             Feeding.timestamp.desc()).all()
@@ -88,13 +100,16 @@ def feeding():
     for user in myusers:
         count = len([x for x in feedings if x.user.name == user])
         counts.append({'name': user, 'count': count})
+    pager = getpager(query, 'feeding')
     return render_template(
         'feeding.html',
+        route='feeding',
         title='Feeding',
         form=form,
-        feedings=feedings,
+        query=query,
         counts=counts,
-        aquariums=aquariums)
+        aquariums=aquariums,
+        pager=pager)
 
 
 @app.route('/feeding/new', methods=['POST'])
@@ -106,6 +121,7 @@ def new_feeding():
         aquarium_id=current_user.current_aquarium)
     db.session.add(feeding)
     db.session.commit()
+    flash('Your feeding has been recorded', 'success')
     return redirect(url_for('feeding'))
 
 
@@ -143,7 +159,7 @@ def index():
             waterchange))
 
     return render_template(
-        'index.html', title='Home', dash=dash, aquariums=aquariums)
+        'index.html', route='index', title='Home', dash=dash, aquariums=aquariums)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -154,19 +170,21 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid login information.  Try again!')
+            flash('Invalid login information.  Try again!', 'danger')
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('index')
+        flash('You are logged in', 'info')
         return redirect(url_for('index'))
-    return render_template('login.html', title='Log in', form=form)
+    return render_template('login.html', route='login', title='Log in', form=form)
 
 
 @app.route('/logout')
 def logout():
     logout_user()
+    flash('You were successfully logged out', 'warning')
     return redirect(url_for('index'))
 
 
@@ -180,30 +198,40 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('Congratulations you are now registered')
+        flash('Congratulations you are now registered', 'success')
         return redirect(url_for('index'))
-    return render_template('register.html', title='New User Registration', form=form)
+    return render_template('register.html', route='register', title='New User Registration', form=form)
 
 
-@app.route('/temperature', methods=['POST', 'GET'])
+@app.route('/temperature', methods=['GET'])
 @login_required
 def temperature():
+    page = request.args.get('page', 1, type=int)
     form = NewTemperaturReadingForm()
+    query = Temperature.query.filter_by(
+        aquarium_id=current_user.current_aquarium).order_by(
+            Temperature.timestamp.desc()).paginate(
+                page, app.config['PAGINATE'], False)
+    aquariums = Aquarium.query.all()
+    average = 0
+
     temps = Temperature.query.filter_by(
         aquarium_id=current_user.current_aquarium).order_by(
             Temperature.timestamp.desc()).all()
-    aquariums = Aquarium.query.all()
-    average = 0
-    if len(temps) > 0:
-        average = sum([x.temp for x in temps]) / len(temps)
 
+    if len(temps) > 0:
+        average = int(sum([x.temp for x in temps]) / len(temps))
+
+    pager = getpager(query, 'temperature')
     return render_template(
         'temperature.html',
         title='Temperature',
+        route='temperature',
         form=form,
         average=average,
-        temps=temps,
-        aquariums=aquariums)
+        query=query,
+        aquariums=aquariums,
+        pager=pager)
 
 
 @app.route('/temperature/new', methods=['POST'])
@@ -215,6 +243,7 @@ def new_temperature():
         aquarium_id=current_user.current_aquarium)
     db.session.add(t)
     db.session.commit()
+    flash('The temperature reading for was sucessfully added', 'success')
     return redirect(url_for('temperature'))
 
 
@@ -225,15 +254,20 @@ def user(id):
     wchanges = WaterChange.query.filter_by(user_id=user.id)
     feedings = Feeding.query.filter_by(user_id=user.id)
     return render_template(
-        'user.html', title='{}\'s profile'.format(user.name),
+        'user.html', route='user', title='{}\'s profile'.format(user.name),
         user=user, waterChanges=wchanges, feedings=feedings)
 
 
 @app.route('/waterchange', methods=['GET'])
 @login_required
 def waterchange():
+    page = request.args.get('page', 1, type=int)
     form = NewWaterChangeForm()
     aquariums = Aquarium.query.all()
+    query = WaterChange.query.filter_by(
+        aquarium_id=current_user.current_aquarium).order_by(
+            WaterChange.timestamp.desc()).paginate(
+                page, app.config['PAGINATE'], False)
     waterchanges = WaterChange.query.filter_by(
         aquarium_id=current_user.current_aquarium).order_by(
             WaterChange.timestamp.desc()).all()
@@ -248,14 +282,17 @@ def waterchange():
     if len(waterchanges) > 0:
         average = int(sum([x.amount for x in waterchanges]) / len(waterchanges))
 
+    pager = getpager(query, 'waterchange')
     return render_template(
         'waterchange.html',
+        route='waterchange',
         title='Water Change',
         form=form,
-        waterchanges=waterchanges,
+        query=query,
         average=average,
         counts=counts,
-        aquariums=aquariums)
+        aquariums=aquariums,
+        pager=pager)
 
 
 @app.route('/waterchange/new', methods=['POST'])
@@ -268,4 +305,21 @@ def new_waterchange():
         aquarium_id=current_user.current_aquarium)
     db.session.add(wc)
     db.session.commit()
+    flash('Your waterchange was successfully recorded', 'success')
     return redirect(url_for('waterchange'))
+
+
+def getpager(query, route):
+    next_url = url_for(route, page=query.next_num) \
+        if query.has_next else None
+    prev_url = url_for(route, page=query.prev_num) \
+        if query.has_prev else None
+    startpage = 1
+    endpage = query.pages + 1
+    if query.pages > 10:
+        if query.page > 5:
+            startpage = query.page - 5
+        if startpage + 10 < query.pages:
+            endpage = startpage + 10
+
+    return Pager(next_url, prev_url, startpage, endpage, route)

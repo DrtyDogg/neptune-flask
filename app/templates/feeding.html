@@ -15,7 +15,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for feeding in feedings %}
+                    {% for feeding in query.items %}
                     <tr>
                         <td>{{ moment(feeding.timestamp).format('LLL') }}</td>
                         <td>{{ feeding.user.name }}</td>
@@ -25,6 +25,7 @@
                 </tbody>
             </table>
         </div>
+        {% include '_pager.html' %}
     </div>
 </div>
 <div class="col-md-3">

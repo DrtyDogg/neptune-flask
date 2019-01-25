@@ -16,7 +16,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for wc in waterchanges %}
+                    {% for wc in query.items %}
                     <tr>
                         <td>{{ moment(wc.timestamp).format('LLL') }}</td>
                         <td>{{ wc.amount }}</td>
@@ -26,6 +26,7 @@
                 </tbody>
             </table>
         </div>
+        {% include '_pager.html' %}
     </div>
 </div>
 <div class="col-md-3">

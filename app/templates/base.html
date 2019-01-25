@@ -20,10 +20,10 @@ Welcome to the Ellis Fish Tracks
             <a class="navbar-brand" href="{{ url_for('index') }}">Fish Tracker</a>
         </div>
         <ul class="nav navbar-nav">
-            <li class="active"><a href="{{ url_for('index') }}">Home</a></li>
-            <li><a href="{{ url_for('feeding') }}">Feeding</a></li>
-            <li><a href="{{ url_for('waterchange') }}">Water Change</a></li>
-            <li><a href="{{ url_for('temperature') }}">Temperature</a></li>
+            <li class="{{ 'active' if route == 'index' }}"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="{{ 'active' if route == 'feeding' }}"><a href="{{ url_for('feeding') }}">Feeding</a></li>
+            <li class="{{ 'active' if route == 'waterchange' }}"><a href="{{ url_for('waterchange') }}">Water Change</a></li>
+            <li class="{{ 'active' if route == 'temperature' }}"><a href="{{ url_for('temperature') }}">Temperature</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
             {% if aquariums %}
@@ -33,25 +33,25 @@ Welcome to the Ellis Fish Tracks
                     <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="{{ url_for('edit_aquarium', name=aquariums[current_user.current_aquarium - 1].name)}}">Edit {{ aquariums[current_user.current_aquarium - 1].name }}</a></li>
+                    <li class="{{ 'active' if route == 'edit_aquarium' }}"><a href="{{ url_for('edit_aquarium', name=aquariums[current_user.current_aquarium - 1].name)}}">Edit {{ aquariums[current_user.current_aquarium - 1].name }}</a></li>
                     {% for aquarium in aquariums %}
                     {% if aquarium.id != current_user.current_aquarium %}
                     <li><a href="{{ url_for('set_aquarium', aquarium_id=aquarium.id) }}">{{ aquarium.name }}</a></li>
                     {% endif %}
                     {% endfor %}
-                    <li><a href="{{ url_for('new_aquarium') }}">New aquarium</a></li>
+                    <li class="{{ 'active' if route == 'aquarium' }}"><a href="{{ url_for('new_aquarium') }}">New aquarium</a></li>
                 </ul>
                 {% endif %}
             </li>
             {% if current_user.is_anonymous %}
-            <li><a href="{{ url_for('register') }}"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
-            <li><a href="{{ url_for('login') }}"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+            <li class="{{ 'active' if route == 'register' }}"><a href="{{ url_for('register') }}"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
+            <li class="{{ 'active' if route == 'login' }}"><a href="{{ url_for('login') }}"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
             {% else %}
             <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span> 
+                <a class="dropdown-toggle" data-toggle="dropdown"> 
                     {{ current_user.name }}<span class="caret"></span></a>
                 <ul class="dropdown-menu">
-                    <li><a href="{{url_for('user',id=current_user.id)}}">Profile</a></li>
+                    <li class="{{ 'active' if route == 'user' }}"><a href="{{url_for('user',id=current_user.id)}}"><span class="glyphicon glyphicon-user"></span>Profile</a></li>
                     <li><a href="{{url_for('logout') }}"><span class="glyphicon glyphicon-log-out"></span> Log out</a></li>
                 </ul>
             </li>
@@ -59,18 +59,19 @@ Welcome to the Ellis Fish Tracks
         </ul>
     </div>
 </nav>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade in" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <!-- <strong>Title</strong> --> {{ message }}
+        </div>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
 {% endblock %}
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<ul class="alert alert-warning">
-    {% for message in messages %}
-    <li>
-        {{ message }}
-    </li>
-    {% endfor %}
-</ul>
-{% endif %}
-{% endwith %}
 
 {% block content %}
 
