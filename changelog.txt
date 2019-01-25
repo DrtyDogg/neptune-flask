@@ -13,5 +13,6 @@ fixed the waterchange counts showing all aquariums
 fixed the feedings count to not need a call to the Users table
 added logging when not in debug mode
 added pagination to the waterchange, feeding, temperature pages
-//convert to flask blueprints
+//convert to flask blueprints ** postponed until the data is moved to a single table
 fixed the flash messages
+force creation of admin user and first aquarium
