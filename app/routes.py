@@ -72,6 +72,9 @@ def edit_aquarium(name):
 @app.route('/aquarium/set/<aquarium_id>', methods=['GET'])
 @login_required
 def set_aquarium(aquarium_id):
+    prev = request.args.get('return')
+    if prev is None:
+        prev = '/index'
     current_user.current_aquarium = aquarium_id
     db.session.commit()
     next_page = request.args.get('next')
@@ -79,7 +82,7 @@ def set_aquarium(aquarium_id):
     if not next_page or url_parse(next_page.netloc) != '':
         next_page = url_for('index')
     flash('You have set {} as the current aquarium'.format(aquarium.name), 'info')
-    return redirect(next_page)
+    return redirect(prev)
 
 
 @app.route('/feeding', methods=['GET'])

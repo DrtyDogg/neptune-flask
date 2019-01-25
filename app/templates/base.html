@@ -36,7 +36,7 @@ Welcome to the Ellis Fish Tracks
                     <li class="{{ 'active' if route == 'edit_aquarium' }}"><a href="{{ url_for('edit_aquarium', name=aquariums[current_user.current_aquarium - 1].name)}}">Edit {{ aquariums[current_user.current_aquarium - 1].name }}</a></li>
                     {% for aquarium in aquariums %}
                     {% if aquarium.id != current_user.current_aquarium %}
-                    <li><a href="{{ url_for('set_aquarium', aquarium_id=aquarium.id) }}">{{ aquarium.name }}</a></li>
+                    <li><a href="{{ url_for('set_aquarium', aquarium_id=aquarium.id) }}?return={{ request.full_path }}">{{ aquarium.name }}</a></li>
                     {% endif %}
                     {% endfor %}
                     <li class="{{ 'active' if route == 'aquarium' }}"><a href="{{ url_for('new_aquarium') }}">New aquarium</a></li>
