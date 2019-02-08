@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+    <!-- This super() is needed to use jquery because flask is -->
+    {{ super() }}
+    <script>
+        $('.activeCheckbox').change(function(){
+            $.post('{{ url_for("setactive") }}', {
+                userid: $(this).attr('data-id'),
+                status: $(this).is(':checked')
+            }).success(function(response){
+                $('#flash').append(flashMessage(response));
+            }).fail(function(response){
+                $('#error').text('you fucked up')
+            });
+        })
+        $('.adminCheckbox').change(function(){
+            $.post('{{ url_for("setadmin") }}', {
+                userid: $(this).attr('data-id'),
+                status: $(this).is(':checked')
+            }).success(function(response){
+                $('#flash').append(flashMessage(response));
+            }).fail(function(response){
+                $('#error').text('you fucked up')
+            });
+        })
+        var flashMessage = function(data){
+                var html = '<div class="alert alert-' + data['type']+ ' fade in"><a href="#" class="close" data-dismiss="alert">&times;</a>' + data.text + '</div>';
+            return html
+        }
+    </script>
+{% endblock %}
+{% block content %}
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Admin</th>
+            <th>Enabled</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.name }}</td>
+            <td><a href="mailto:{{ user.email }}">{{ user.email }}</a></td>
+            <td><input type="checkbox" class="checkbox adminCheckbox" {{ 'checked' if user.isadmin() }} {{ 'disabled' if user.email == current_user.email }} data-id="{{ user.id }}" /></td>
+            <td><input type="checkbox" class="checkbox activeCheckbox" {{ 'checked' if user.active }}  {{ 'disabled' if user.email == current_user.email }} data-id="{{ user.id }}" /></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <h1 id="error"></h1>
+</table>
+{% endblock %}

@@ -1,20 +1,27 @@
 from app import app, db
-from flask import render_template, flash, request, redirect, url_for
 from app.forms import AquariumForm, LoginForm, RegistrationForm, NewFeedingForm, NewWaterChangeForm, NewTemperaturReadingForm
-from flask_login import current_user, login_user, logout_user, login_required
-from app.models import User, WaterChange, Feeding, Temperature, Aquarium, Dashboard, Pager
-from werkzeug.urls import url_parse
+from app.models import User, WaterChange, Feeding, Temperature, Aquarium, Dashboard, Pager, Role
 from datetime import datetime
+from flask import render_template, flash, request, redirect, url_for, jsonify
+from flask_login import current_user, login_user, logout_user
+from werkzeug.urls import url_parse
+from app.userlogin import role_required
 
 
 @app.before_request
 def before_request():
     # check if it is a new installation
+    if Role.query.first() is None:
+        admin = Role(name='admin')
+        user = Role(name='user')
+        db.session.add(admin)
+        db.session.add(user)
+        db.session.commit()
     if User.query.first() is None:
         if request.path != url_for('register'):
             flash('No users exist, please create an admin user', category='warning')
             return redirect(url_for('register'))
-    else:
+    elif request.path != url_for('login'):
         if Aquarium.query.first() is None:
             if request.path != url_for('new_aquarium'):
                 flash('There are not any aquariums, please create one to continue', category='warning')
@@ -26,7 +33,7 @@ def before_request():
 
 
 @app.route('/aquarium/create', methods=['GET', 'POST'])
-@login_required
+@role_required(role='admin')
 def new_aquarium():
     form = AquariumForm()
     aquariums = Aquarium.query.all()
@@ -49,7 +56,7 @@ def new_aquarium():
 
 
 @app.route('/aquarium/edit/<name>', methods=['GET', 'POST'])
-@login_required
+@role_required(role='admin')
 def edit_aquarium(name):
     form = AquariumForm()
     aquariums = Aquarium.query.all()
@@ -73,7 +80,7 @@ def edit_aquarium(name):
 
 
 @app.route('/aquarium/set/<aquarium_id>', methods=['GET'])
-@login_required
+@role_required()
 def set_aquarium(aquarium_id):
     prev = request.args.get('return')
     if prev is None:
@@ -89,7 +96,7 @@ def set_aquarium(aquarium_id):
 
 
 @app.route('/feeding', methods=['GET'])
-@login_required
+@role_required()
 def feeding():
     page = request.args.get('page', 1, type=int)
     form = NewFeedingForm()
@@ -119,7 +126,7 @@ def feeding():
 
 
 @app.route('/feeding/new', methods=['POST'])
-@login_required
+@role_required()
 def new_feeding():
     feeding = Feeding(
         user_id=current_user.id,
@@ -188,6 +195,7 @@ def login():
 
 
 @app.route('/logout')
+@role_required()
 def logout():
     logout_user()
     flash('You were successfully logged out', 'warning')
@@ -200,8 +208,15 @@ def register():
         return redirect(url_for('profile'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(email=form.email.data, name=form.name.data)
+        first = User.query.first()
+        user = User(email=form.email.data, name=form.name.data, active=True)
         user.set_password(form.password.data)
+        user.roles.append(Role.query.filter_by(name='user').first())
+        # Check if there is no admin
+        if first is None:
+            user.roles.append(Role.query.filter_by(name='admin').first())
+            flash('With great power comes greate responsibility.  Since you are the first user, you have been made and admin', 'warning')
+
         db.session.add(user)
         db.session.commit()
         flash('Congratulations you are now registered', 'success')
@@ -210,7 +225,7 @@ def register():
 
 
 @app.route('/temperature', methods=['GET'])
-@login_required
+@role_required()
 def temperature():
     page = request.args.get('page', 1, type=int)
     form = NewTemperaturReadingForm()
@@ -241,7 +256,7 @@ def temperature():
 
 
 @app.route('/temperature/new', methods=['POST'])
-@login_required
+@role_required()
 def new_temperature():
     t = Temperature(
         temp=request.form['temp'],
@@ -254,7 +269,7 @@ def new_temperature():
 
 
 @app.route('/user/<id>')
-@login_required
+@role_required()
 def user(id):
     user = User.query.get(id)
     wchanges = WaterChange.query.filter_by(user_id=user.id)
@@ -264,8 +279,57 @@ def user(id):
         user=user, waterChanges=wchanges, feedings=feedings)
 
 
+@app.route('/user/setactive', methods=['POST'])
+@role_required(role='admin')
+def setactive():
+    user = User.query.filter_by(id=request.form['userid']).first()
+    if request.form['status'] == 'true':
+        status = True
+        isactive = 'enabled'
+        msgtype = 'success'
+    else:
+        status = False
+        isactive = 'disabled'
+        msgtype = 'danger'
+    user.active = status
+    db.session.commit()
+
+    text = '{0} has been {1}'.format(user.name, isactive)
+    message = {'type': msgtype, 'text': text}
+    return jsonify(message)
+
+
+@app.route('/user/setadmin', methods=['POST'])
+@role_required(role='admin')
+def setadmin():
+    admin = Role.query.filter_by(name='admin').first()
+    user = User.query.filter_by(id=request.form['userid']).first()
+    if request.form['status'] == 'true':
+        msgtype = 'success'
+        text = 'Congratulate {} on becoming and administrator!'.format(user.name)
+        user.roles.append(admin)
+    else:
+        user.roles.remove(admin)
+        msgtype = 'warning'
+        text = '{} is no longer an administrator'.format(user.name)
+    db.session.commit()
+
+    message = {'type': msgtype, 'text': text}
+    return jsonify(message)
+
+
+@app.route('/users')
+@role_required(role='admin')
+def users():
+    users = User.query.all()
+
+    return render_template(
+        'users.html', route='users', title='all users', users=users
+    )
+
+
 @app.route('/waterchange', methods=['GET'])
-@login_required
+@role_required()
 def waterchange():
     page = request.args.get('page', 1, type=int)
     form = NewWaterChangeForm()
@@ -302,7 +366,7 @@ def waterchange():
 
 
 @app.route('/waterchange/new', methods=['POST'])
-@login_required
+@role_required()
 def new_waterchange():
     wc = WaterChange(
         user_id=current_user.id,

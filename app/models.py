@@ -4,13 +4,15 @@ from flask_login import UserMixin
 from datetime import datetime
 
 
-class User(UserMixin, db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(64), index=True)
     name = db.Column(db.String(32))
     password_hash = db.Column(db.String(128))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow())
+    active = db.Column(db.Boolean, default=True)
     current_aquarium = db.Column(db.Integer, default=1)
+    roles = db.relationship('Role', secondary='user_roles', backref='users')
     feedings = db.relationship('Feeding', backref='user', lazy='dynamic')
     water_changes = db.relationship(
         'WaterChange', backref='user', lazy='dynamic')
@@ -22,7 +24,32 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return '<User {}>'.format(self.name)
+        return self.name
+
+    def isadmin(self):
+        if self is None:
+            return False
+        else:
+            return [x for x in self.roles if x.name == 'admin']
+
+
+class Role(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), unique=True, index=True)
+
+    def __repr__(self):
+        return self.name
+
+
+class UserRoles(db.Model):
+    __table_name__ = 'user_roles'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey(
+        'user.id',
+        ondelete='CASCADE'))
+    role_id = db.Column(db.Integer(), db.ForeignKey(
+        'role.id',
+        ondelete='CASCADE'))
 
 
 @login.user_loader
