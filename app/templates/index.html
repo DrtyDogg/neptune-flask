@@ -2,8 +2,8 @@
 
 {% block content %}
 {% for dashboard in dash %}
-<h2>{{ dashboard.name }}</h2>
-<div class="col-md-4 col-sm-6 col-xs12">
+<div class="col-xs-12"><h2 class="dashboardName">{{ dashboard.name }}</h2></div>
+<div class="col-md-4 col-sm-6 col-xs-12">
     <div class="panel panel-default">
         <div class="panel-heading">
             <h2>Last Temp</h2>
@@ -13,7 +13,7 @@
         </div>
     </div>
 </div>
-<div class="col-md-4 col-sm-6 col-xs12">
+<div class="col-md-4 col-sm-6 col-xs-12">
     <div class="panel panel-default">
         <div class="panel-heading">
             <h2>Last Water Change</h2>
@@ -23,7 +23,7 @@
         </div>
     </div>
 </div>
-<div class="col-md-4 col-sm-6 col-xs12">
+<div class="col-md-4 col-sm-6 col-xs-12">
     <div class="panel panel-default">
         <div class="panel-heading">
             <h2>Days since feeding</h2>
@@ -33,5 +33,6 @@
         </div>
     </div>
 </div>
+<hr />
 {% endfor %}
 {% endblock %}

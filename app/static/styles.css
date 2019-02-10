@@ -1,0 +1,61 @@
+a{
+    color: #639fab;
+}
+.btn-primary{
+    background-color: #446688;
+    color: #bbcde5;
+}
+.btn-primary:hover{
+    background-color: #446688;
+    color: #ffffff;
+}
+body{
+    color: #222222;
+}
+.dropdown-menu{
+    background-color: #446688;
+}
+.dropdown-menu>li.active>a, .nav>li.active>a{
+    background-color: #446688;
+    color: #222222;
+    font-weight: bold;
+}
+.dropdown-menu>li.active>a:hover, .dropdown-menu>li>a:hover, 
+.nav .open>a, .dropdown-menu>ul>li:hover, ul.nav a:hover, .nav .open>a:hover{
+    color: #bbcde5;
+    background-color: #1f2f3e;
+}
+.dropdown-menu>li>a:hover, .dropdown-menu>li>a, .nav>li.active>a:hover, 
+.dropdown-menu>ul>li>a:hover{
+    color: #bbcde5;
+}
+.fishtank{
+    text-transform: uppercase;
+}
+hr{
+    color: #639fab;
+}
+.panel-default{
+    border-color: #222222;
+}
+.dashboardName{
+    text-transform: uppercase;
+    text-align: center;
+}
+.navbar-neptune, .navbar-toggle{
+    background-color: #446688;
+    border-color: #1f2f3e;
+}
+.icon-bar{
+    background-color: #222222;
+}
+.navbar-header>a, .nav>li>a{
+    color: #bbcde5;
+}
+.panel-default>.panel-heading{
+    background-color: #446688;
+    border-bottom: 1px solid #222222
+}
+.panel-heading>h1, .panel-heading>h2{
+    color: #bbcde5;
+}
